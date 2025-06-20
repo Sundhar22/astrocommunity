@@ -10,12 +10,16 @@ return {
     "AvanteEdit",
     "AvanteRefresh",
     "AvanteSwitchProvider",
+    "AvanteShowRepoMap",
+    "AvanteModels",
     "AvanteChat",
     "AvanteToggle",
     "AvanteClear",
+    "AvanteFocus",
+    "AvanteStop",
   },
   dependencies = {
-    "stevearc/dressing.nvim",
+    { "stevearc/dressing.nvim", optional = true },
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
     { "AstroNvim/astrocore", opts = function(_, opts) opts.mappings.n[prefix] = { desc = " Avante" } end },
@@ -25,6 +29,7 @@ return {
       ask = prefix .. "<CR>",
       edit = prefix .. "e",
       refresh = prefix .. "r",
+      new_ask = prefix .. "n",
       focus = prefix .. "f",
       select_model = prefix .. "?",
       stop = prefix .. "S",
@@ -32,7 +37,7 @@ return {
       toggle = {
         default = prefix .. "t",
         debug = prefix .. "d",
-        hint = prefix .. "h",
+        hint = prefix .. "H",
         suggestion = prefix .. "s",
         repomap = prefix .. "R",
       },
@@ -42,11 +47,30 @@ return {
       },
       files = {
         add_current = prefix .. ".",
+        add_all_buffers = prefix .. "B",
       },
     },
   },
   specs = { -- configure optional plugins
     { "AstroNvim/astroui", opts = { icons = { Avante = "" } } },
+    {
+      "Kaiser-Yang/blink-cmp-avante",
+      lazy = true,
+      specs = {
+        {
+          "Saghen/blink.cmp",
+          optional = true,
+          opts = {
+            sources = {
+              default = { "avante" },
+              providers = {
+                avante = { module = "blink-cmp-avante", name = "Avante" },
+              },
+            },
+          },
+        },
+      },
+    },
     { -- if copilot.lua is available, default to copilot provider
       "zbirenbaum/copilot.lua",
       optional = true,
@@ -74,9 +98,24 @@ return {
       "OXY2DEV/markview.nvim",
       optional = true,
       opts = function(_, opts)
-        if not opts.filetypes then opts.filetypes = { "markdown", "quarto", "rmd" } end
-        opts.filetypes = require("astrocore").list_insert_unique(opts.filetypes, { "Avante" })
+        if not opts.preview then opts.preview = {} end
+        if not opts.preview.filetypes then opts.preview.filetypes = { "markdown", "quarto", "rmd" } end
+        opts.preview.filetypes = require("astrocore").list_insert_unique(opts.preview.filetypes, { "Avante" })
       end,
+    },
+    {
+      "folke/snacks.nvim",
+      optional = true,
+      specs = {
+        {
+          "yetone/avante.nvim",
+          opts = {
+            selector = {
+              provider = "snacks",
+            },
+          },
+        },
+      },
     },
     {
       "nvim-neo-tree/neo-tree.nvim",
@@ -104,10 +143,10 @@ return {
               if not open then sidebar.file_selector:remove_selected_file "neo-tree filesystem [1]" end
             end,
           },
-        },
-        window = {
-          mappings = {
-            ["oa"] = "avante_add_files",
+          window = {
+            mappings = {
+              ["oa"] = "avante_add_files",
+            },
           },
         },
       },
